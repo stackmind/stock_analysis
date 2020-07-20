@@ -9,8 +9,11 @@ import tushare as ts
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import seaborn as sns
 
-ts.set_token('a52a8119d78a018a4559c35a64866ec6f46feb44ab26f59837a0555d')#注册获取token
+# 设置为seaborn的样式，更美观
+# sns.set()
+# ts.set_token('a52a8119d78a018a4559c35a64866ec6f46feb44ab26f59837a0555d')#注册获取token
 pro = ts.pro_api()
 df1 = pro.daily(ts_code = '600600.SH',start_date = '20170101',end_date='20200717')
 df2 = pro.daily(ts_code = '300529.SZ',start_date = '20170101',end_date='20200717')
