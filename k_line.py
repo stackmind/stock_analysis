@@ -1,107 +1,75 @@
-import mpl_finance
-import tushare as ts
-import pandas as pd
-import seaborn as sns
+#!usr/bin/env python
+#-*- coding:utf-8 -*-
+"""
+@author:shihaojie
+@file: k_line.py.py
+@time: 2020/07/21
+"""
+
+# coding: utf-8
+import os, sys
+import datetime
 import matplotlib.pyplot as plt
-from matplotlib import ticker
 from matplotlib.pylab import date2num
-import numpy as np
-import matplotlib as mpl
-sns.set()
-mpl.rcParams['font.family'] = 'sans-serif'
-mpl.rcParams['font.sans-serif'] = 'SimHei'
-pro = ts.pro_api()
+# import matplotlib.finance as mpf
+import mplfinance as mpf
+import pandas as pd
+import tushare as ts
 
-df = pro.daily(ts_code='000001.SH', start_date='20170101')
-df = df.sort_values(by='trade_date', ascending=True)
-df['trade_date2'] = df['trade_date'].copy()
-df['trade_date'] = pd.to_datetime(df['trade_date']).map(date2num)
-df['dates'] = np.arange(0, len(df))
-df.head()
-df['5'] = df.close.rolling(5).mean()
-df['20'] = df.close.rolling(20).mean()
-df['30'] = df.close.rolling(30).mean()
-df['60'] = df.close.rolling(60).mean()
-df['120'] = df.close.rolling(120).mean()
-df['250'] = df.close.rolling(250).mean()
+##绘制K线图+移动平均线
 
-def format_date(x,pos):
-    if x<0 or x>len(date_tickers)-1:
-        return ''
-    return date_tickers[int(x)]
+if len(sys.argv) == 2:
+    code = sys.argv[1]
+else:
+    print('usage: python mpf_kline.py stockcode ')
+    sys.exit(1)
 
-date_tickers = df.trade_date2.values
-fig, ax = plt.subplots(figsize=(10,5))
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-# 绘制K线图
-mpl_finance.candlestick_ochl(
-    ax=ax,
-    quotes=df[['dates', 'open', 'close', 'high', 'low']].values,
-    width=0.7,
-    colorup='r',
-    colordown='g',
-    alpha=0.7)
-# 绘制均线
-for ma in ['5', '20', '30', '60', '120', '250']:
-    plt.plot(df['dates'], df[ma])
-plt.legend()
-ax.set_title('上证综指K线图(2017.1-)', fontsize=20);
+if len(code) != 6:
+    print('stock code length: 6')
+    sys.exit(2)
 
-df2 = df.query('trade_date2 >= "20180601"').reset_index()
-df2['dates'] = np.arange(0, len(df2))
-date_tickers = df2.trade_date2.values
+# help(ts.get_hist_data) 了解参数
+dh = ts.get_hist_data(code)
+df = dh.sort_values(by='date')
+# print(df.head())
+df = df[df.index > '2020-01-01']
+if len(df) < 10:
+    print(" len(df) <10 ")
+    sys.exit(2)
 
-fig, ax = plt.subplots(figsize=(10,5))
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+# 对tushare获取到的数据转换成 candlestick_ohlc()方法可读取的格式
+alist = []
+tlist = []
+for date, row in df.iterrows():
+    open, high, close, low, volume, price_change, p_change, ma5, ma10, ma20, v_ma5, v_ma10, v_ma20 = row[0:]
+    # 将日期转换为数字
+    date1 = datetime.datetime.strptime(date, '%Y-%m-%d')
+    t = date2num(date1)
+    data = (t, open, high, low, close)
+    alist.append(data)
+    tlist.append(t)
 
-# 绘制K线图
-mpl_finance.candlestick_ochl(
-    ax=ax,
-    quotes=df2[['dates', 'open', 'close', 'high', 'low']].values,
-    width=0.7,
-    colorup='r',
-    colordown='g',
-    alpha=0.7)
+# 加这个两句 可以显示中文
+plt.rcParams['font.sans-serif'] = [u'SimHei']
+plt.rcParams['axes.unicode_minus'] = False
 
-# 绘制均线
-for ma in ['5', '20', '30', '60', '120', '250']:
-    plt.plot(df2['dates'], df2[ma])
-plt.legend()
-ax.set_title('上证综指K线图(2018.6-)', fontsize=20);
-from matplotlib.gridspec import GridSpec
+# 创建子图
+fig, ax = plt.subplots()
+fig.subplots_adjust(bottom=0.2)
+# 设置X轴刻度为日期时间
+ax.xaxis_date()
+ax.autoscale_view()
+# plt.setp(plt.gca().get_xticklabels(), rotation=45)
+plt.xticks(rotation=45)
+plt.yticks()
+plt.title("股票 {0}：K线图".format(code))
+plt.xlabel("date")
+plt.ylabel("price")
+mpf.candlestick_ohlc(ax, alist, colorup='red', colordown='green')
+#  画 10,20日均线
+plt.plot(tlist, df['ma10'].values, 'blue', label='ma10')
+plt.plot(tlist, df['ma20'].values, 'g--', label='ma20')
+plt.legend(loc='best', shadow=True)
+plt.grid()
+plt.show()
 
-# 取18.9以来数据
-df2 = df.query('trade_date2 >= "20180601"').reset_index()
-df2['dates'] = np.arange(0, len(df2))
-date_tickers = df2.trade_date2.values
-
-# 控制子图
-figure = plt.figure(figsize=(12, 9))
-gs = GridSpec(3, 1)
-ax1 = plt.subplot(gs[:2, :])
-ax2 = plt.subplot(gs[2, :])
-
-# 绘制K线图
-mpl_finance.candlestick_ochl(
-    ax=ax1,
-    quotes=df2[['dates', 'open', 'close', 'high', 'low']].values,
-    width=0.7,
-    colorup='r',
-    colordown='g',
-    alpha=0.7)
-ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-
-# 绘制均线
-for ma in ['5', '20', '30', '60', '120', '250']:
-    ax1.plot(df2['dates'], df2[ma])
-ax1.legend()
-ax1.set_title('上证综指K线图(2018.6-)', fontsize=20)
-ax1.set_ylabel('指数')
-
-# 绘制成交量
-ax2.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-df2['up'] = df.apply(lambda row: 1 if row['close'] >= row['open'] else 0, axis=1)
-ax2.bar(df2.query('up == 1')['dates'], df2.query('up == 1')['vol'], color='r', alpha=0.7)
-ax2.bar(df2.query('up == 0')['dates'], df2.query('up == 0')['vol'], color='g', alpha=0.7)
-ax2.set_ylabel('成交量')
-#plt.xticks(date_tickers);
