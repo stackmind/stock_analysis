@@ -15,7 +15,7 @@ from pyecharts import options as opts
 import webbrowser as wb
 from pyecharts.commons.utils import JsCode
 
-def get_basic_data(tscode, start_date, end_date):  # 获取股票基本数据，包括开盘价，最高价，最低价，收盘价，成交量
+def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据，包括开盘价，最高价，最低价，收盘价，成交量
 
     if (os.path.exists('stock_basic_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
@@ -36,7 +36,7 @@ def get_basic_data(tscode, start_date, end_date):  # 获取股票基本数据，
     return stock_basic_data
 
 
-def get_kdj_data(tscode, start_date, end_date):  # 获取KDJ数据，分三列，分别是K线，D线，J线
+def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列，分别是K线，D线，J线
 
     if (os.path.exists('stock_kdj_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
@@ -67,7 +67,7 @@ def get_kdj_data(tscode, start_date, end_date):  # 获取KDJ数据，分三列�
     return stock_kdj_data
 
 
-def get_ma_data(tscode, start_date, end_date):  # 获取移动平均线，分别是5日，10日，20日
+def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分别是5日，10日，20日
 
     if (os.path.exists('stock_ma_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
@@ -98,7 +98,7 @@ def get_ma_data(tscode, start_date, end_date):  # 获取移动平均线，分别
     return stock_ma_data
 
 
-def get_macd_data(tscode, start_date, end_date):  # 获取MACD数据，分别是DIF,DEA,MACD
+def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别是DIF,DEA,MACD
 
     if (os.path.exists('stock_macd_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
@@ -134,7 +134,7 @@ def get_macd_data(tscode, start_date, end_date):  # 获取MACD数据，分别是
     return stock_macd_data
 
 
-def get_boll_data(tscode, start_date, end_date):  # 获取布林线，分别是MID，UPPER,LOWER
+def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是MID，UPPER,LOWER
 
     if (os.path.exists('stock_boll_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
@@ -163,13 +163,14 @@ def get_boll_data(tscode, start_date, end_date):  # 获取布林线，分别是M
         print('本次BOLL数据从Windpy网络获取。')
     return stock_boll_data
 
-def get_process_datas(tscode, start_date, end_date):
+def get_process_datas(ts_code, start_date, end_date):#合并获得的数据
     stock_basic_data = get_basic_data(ts_code, start_date, end_date)
     stock_kdj_data = get_kdj_data(ts_code, start_date, end_date)
     stock_ma_data = get_ma_data(ts_code, start_date, end_date)
     stock_macd_data = get_macd_data(ts_code, start_date, end_date)
     stock_boll_data = get_boll_data(ts_code, start_date, end_date)
     stock_data=pd.merge(stock_basic_data,stock_ma_data)
+    stock_data=pd.merge(stock_data,stock_kdj_data)
     return stock_data
 
 def draw_chart(stock_data):
@@ -178,12 +179,13 @@ def draw_chart(stock_data):
        文档地址 https://pyecharts.org/#/zh-cn/
     '''
     stock_data.index = pd.to_datetime(stock_data['TIME'], format="%Y/%m/%d")
+    x = stock_data[["TIME"]].values[:,0].tolist()
     stock_basic_data = stock_data[["TIME", "OPEN", "CLOSE", "LOW", "HIGH", "VOLUME"]]
     # stock_data = stock_data.sort_index(ascending=True)  # 倒序，看时间顺序是否正常决定是不是要用
     # k线图
     kline = (
         Kline()
-            .add_xaxis(stock_basic_data[["TIME"]].values.tolist())
+            .add_xaxis(x)
             .add_yaxis("K线图", stock_basic_data.iloc[:, 1:5].values.tolist(), itemstyle_opts=opts.ItemStyleOpts(
             color="#ec0000",
             color0="#00da3c"
@@ -200,6 +202,7 @@ def draw_chart(stock_data):
                                      ),  # y轴起始坐标可自动调整
             title_opts=opts.TitleOpts(title="价格",
                                       subtitle=ts_code,
+                                      pos_left='10%',
                                       pos_top="20%"),
             axispointer_opts=opts.AxisPointerOpts(is_show=True,
                                                   link=[{"xAxisIndex": "all"}],
@@ -224,25 +227,16 @@ def draw_chart(stock_data):
                 ),
 
             ],
-            brush_opts=opts.BrushOpts(
-                x_axis_index="all",
-                brush_link="all",
-                out_of_brush={"colorAlpha": 0.1},
-                brush_type="lineX",
-            ),
 
         )
     )
 
     # 成交量柱形图
-    x = stock_basic_data[["TIME"]].values.tolist()
-    y = stock_basic_data[["VOLUME"]].values[:, 0].tolist()
-
-    bar = (
+    bar_volumn = (
         Bar()
             .add_xaxis(x)
             .add_yaxis("成交量",
-                       y,
+                       stock_basic_data[["VOLUME"]].values[:, 0].tolist(),
                        xaxis_index=1,
                        yaxis_index=1,
                        label_opts=opts.LabelOpts(is_show=False),
@@ -263,40 +257,84 @@ def draw_chart(stock_data):
                            )
                        ),
                        )
-            .set_global_opts(title_opts=opts.TitleOpts(title="成交量", pos_top="70%"),
+            .set_global_opts(title_opts=opts.TitleOpts(title="成交量", pos_left='10%',pos_top="60%"),
                              legend_opts=opts.LegendOpts(is_show=False),
                              )
     )
-    # print(len(x))
-    # print(len(stock_data[["MA5"]].values.tolist()))
-    line = (
+    #绘制均线图
+    line_ma = (
         Line()
             .add_xaxis(x)
             .add_yaxis(
             series_name="MA5",
-            y_axis=stock_data[["MA5"]].values.tolist(),
+            y_axis=stock_data[["MA5"]].values[:, 0].tolist(),
             is_smooth=True,
+            is_hover_animation=False,
+            linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+            .add_yaxis(
+            series_name="MA10",
+            y_axis=stock_data[["MA10"]].values[:, 0].tolist(),
+            is_smooth=True,
+            is_hover_animation=False,
+            linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+            .add_yaxis(
+            series_name="MA20",
+            y_axis=stock_data[["MA20"]].values[:, 0].tolist(),
+            is_smooth=True,
+            is_hover_animation=False,
+            linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+
+            .set_global_opts(xaxis_opts=opts.AxisOpts(type_="category"),
+                             datazoom_opts=[opts.DataZoomOpts(type_="inside")],)
+    )
+
+    line_kdj = (
+        Line()
+            .add_xaxis(x)
+            .add_yaxis(
+            series_name="K",
+            y_axis=stock_data[["K"]].values[:, 0].tolist(),
+            xaxis_index=1,
+            yaxis_index=1,
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
-            .set_global_opts(
-            xaxis_opts=opts.AxisOpts(
-                type_="category",
-                grid_index=1,
-                axislabel_opts=opts.LabelOpts(is_show=False),
-            ),
-            yaxis_opts=opts.AxisOpts(
-                grid_index=1,
-                split_number=3,
-                axisline_opts=opts.AxisLineOpts(is_on_zero=False),
-                axistick_opts=opts.AxisTickOpts(is_show=False),
-                splitline_opts=opts.SplitLineOpts(is_show=False),
-                axislabel_opts=opts.LabelOpts(is_show=True),
-            ),
+            .add_yaxis(
+            series_name="D",
+            y_axis=stock_data[["D"]].values[:, 0].tolist(),
+            xaxis_index=1,
+            yaxis_index=1,
+            linestyle_opts=opts.LineStyleOpts(opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
         )
+            .add_yaxis(
+            series_name="J",
+            y_axis=stock_data[["J"]].values[:, 0].tolist(),
+            xaxis_index=1,
+            yaxis_index=1,
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+
+            .set_global_opts(title_opts=opts.TitleOpts(title="KDJ", pos_left='10%',pos_top="75%"),
+                             datazoom_opts=[opts.DataZoomOpts(type_="inside",)],
+                             legend_opts=opts.LegendOpts(is_show=False),
+                             yaxis_opts=opts.AxisOpts(grid_index=1,
+                                                      split_number=3,
+                                                      axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                                                      axistick_opts=opts.AxisTickOpts(is_show=False),
+                                                      splitline_opts=opts.SplitLineOpts(is_show=False),
+                                                      axislabel_opts=opts.LabelOpts(is_show=True),
+            ),)
     )
-    # Overlap Kline + Line
-    overlap_kline = kline.overlap(line)
+
+
+    overlap_kline_linema= kline.overlap(line_ma)
     # 使用网格将多张图标组合到一起显示
     grid_chart = Grid(init_opts=opts.InitOpts(
         width="1200px",
@@ -304,26 +342,35 @@ def draw_chart(stock_data):
         animation_opts=opts.AnimationOpts(animation=False),
     ))
 
-    # 为了把 data.datas 这个数据写入到 html 中,无法跨 series 传值
+    # 为了把 data.datas 的数据写入到html中作为全局变量,目前无法跨 series 传值
     # demo 中的代码也是用全局变量传的
-    grid_chart.add_js_funcs("var barData = {}".format(stock_data.iloc[:, 1:5].values.tolist()))
+    grid_chart.add_js_funcs("var barData = {}".format(stock_basic_data.iloc[:, 1:5].values.tolist()))
     grid_chart.add(
-        overlap_kline,
-        grid_opts=opts.GridOpts(pos_left="15%", pos_right="15%", height="55%"),
+        overlap_kline_linema ,
+        grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", height="50%"),
+
     )
 
     grid_chart.add(
-        bar,
-        grid_opts=opts.GridOpts(pos_left="15%", pos_right="15%", pos_top="70%", height="20%"),
+        bar_volumn,
+        grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", pos_top="60%", height="10%"),
+    )
+
+    grid_chart.add(
+        line_kdj,
+        grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", pos_top="75%", height="15%")
     )
 
     grid_chart.render('stock_{}.html'.format(ts_code))  # 保存成用股票代码命名的文档
 
 
+    return 0
+
+
 if __name__ == "__main__":
     ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
-    start_date = '2020-01-01'  # 开始日期
-    end_date = '2020-07-21'  # 结束日期
+    start_date = '2019-01-01'  # 开始日期
+    end_date = '2020-07-28'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
     print(stock_data.head())
     draw_chart(stock_data)
