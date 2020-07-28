@@ -164,13 +164,22 @@ def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是
     return stock_boll_data
 
 def get_process_datas(ts_code, start_date, end_date):#合并获得的数据
-    stock_basic_data = get_basic_data(ts_code, start_date, end_date)
-    stock_kdj_data = get_kdj_data(ts_code, start_date, end_date)
-    stock_ma_data = get_ma_data(ts_code, start_date, end_date)
-    stock_macd_data = get_macd_data(ts_code, start_date, end_date)
-    stock_boll_data = get_boll_data(ts_code, start_date, end_date)
-    stock_data=pd.merge(stock_basic_data,stock_ma_data)
-    stock_data=pd.merge(stock_data,stock_kdj_data)
+    if (os.path.exists('stock_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+        # 将数据保存到本地csv文件
+        stock_data = pd.read_csv('stock_{}.csv'.format(ts_code))
+        print('本次使用本地数据。')
+    else:
+        stock_basic_data = get_basic_data(ts_code, start_date, end_date)
+        stock_kdj_data = get_kdj_data(ts_code, start_date, end_date)
+        stock_ma_data = get_ma_data(ts_code, start_date, end_date)
+        stock_macd_data = get_macd_data(ts_code, start_date, end_date)
+        stock_boll_data = get_boll_data(ts_code, start_date, end_date)
+        stock_data = pd.merge(stock_basic_data,stock_ma_data)
+        stock_data = pd.merge(stock_data,stock_kdj_data)
+        stock_data = pd.merge(stock_data,stock_macd_data)
+        stock_data = pd.merge(stock_data,stock_boll_data)
+        stock_data.to_csv('stock_{}.csv'.format(ts_code), index_label='TIME')
+        print('本次数据从Windpy网络获取。')
     return stock_data
 
 def draw_chart(stock_data):
@@ -324,13 +333,15 @@ def draw_chart(stock_data):
             .set_global_opts(title_opts=opts.TitleOpts(title="KDJ", pos_left='10%',pos_top="75%"),
                              datazoom_opts=[opts.DataZoomOpts(type_="inside",)],
                              legend_opts=opts.LegendOpts(is_show=False),
-                             yaxis_opts=opts.AxisOpts(grid_index=1,
-                                                      split_number=3,
-                                                      axisline_opts=opts.AxisLineOpts(is_on_zero=False),
-                                                      axistick_opts=opts.AxisTickOpts(is_show=False),
-                                                      splitline_opts=opts.SplitLineOpts(is_show=False),
-                                                      axislabel_opts=opts.LabelOpts(is_show=True),
-            ),)
+                             xaxis_opts=opts.AxisOpts(is_scale=True),
+                             yaxis_opts=opts.AxisOpts(
+                                 is_scale=True,
+                                 splitarea_opts=opts.SplitAreaOpts(
+                                     is_show=True, areastyle_opts=opts.AreaStyleOpts(opacity=1)
+                                 ),
+                             ),
+
+                             )
     )
 
 
@@ -372,7 +383,7 @@ if __name__ == "__main__":
     start_date = '2019-01-01'  # 开始日期
     end_date = '2020-07-28'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
-    print(stock_data.head())
+    # print(stock_data.head())
     draw_chart(stock_data)
     wb.open('stock_{}.html'.format(ts_code))
 
