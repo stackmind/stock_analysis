@@ -27,10 +27,9 @@ def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据�
         w.close()
         if error != 0:
             raise AssertionError("API数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error, basic_data.values[0][0]))
-        # print(data.head() )#查看前几行数据
         basic_data.to_csv('stock_basic_{}.csv'.format(ts_code), index_label='TIME')
         stock_basic_data = pd.read_csv('stock_basic_{}.csv'.format(ts_code))
-        print(stock_basic_data.head())
+       # print(stock_basic_data.head())#查看前几行数据
         print('本次股票基本数据从Windpy网络获取。')
 
     return stock_basic_data
@@ -144,7 +143,7 @@ def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是
         w.start()
         error1, mid_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=1", usedf=True)
         error2, upper_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=2",usedf=True)
-        error3, lower_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=1",usedf=True)
+        error3, lower_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=3",usedf=True)
         w.close()
         if error1 != 0:
             raise AssertionError("MID数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, mid_data.values[0][0]))
@@ -178,7 +177,7 @@ def get_process_datas(ts_code, start_date, end_date):#合并获得的数据
         stock_data = pd.merge(stock_data,stock_kdj_data)
         stock_data = pd.merge(stock_data,stock_macd_data)
         stock_data = pd.merge(stock_data,stock_boll_data)
-        stock_data.to_csv('stock_{}.csv'.format(ts_code), index_label='TIME')
+        stock_data.to_csv('stock_{}.csv'.format(ts_code))
         print('本次数据从Windpy网络获取。')
     return stock_data
 
@@ -198,8 +197,7 @@ def draw_chart(stock_data):
             .add_yaxis("K线图", stock_basic_data.iloc[:, 1:5].values.tolist(), itemstyle_opts=opts.ItemStyleOpts(
             color="#ec0000",
             color0="#00da3c"
-        ),
-                       )
+        ),)
             .set_global_opts(
             xaxis_opts=opts.AxisOpts(is_scale=True,
                                      is_show=False),
@@ -209,9 +207,11 @@ def draw_chart(stock_data):
                                                                        areastyle_opts=opts.AreaStyleOpts(opacity=1)
                                                                        ),
                                      ),  # y轴起始坐标可自动调整
-            title_opts=opts.TitleOpts(title="价格",
+            tooltip_opts=opts.TooltipOpts(trigger="item", axis_pointer_type="line"),
+            legend_opts=opts.LegendOpts(is_show=True, orient='vertical', pos_right="5%", pos_top='20%'),
+            title_opts=opts.TitleOpts(title="股票价格",
                                       subtitle=ts_code,
-                                      pos_left='10%',
+                                      pos_left='20%',
                                       pos_top="20%"),
             axispointer_opts=opts.AxisPointerOpts(is_show=True,
                                                   link=[{"xAxisIndex": "all"}],
@@ -222,15 +222,7 @@ def draw_chart(stock_data):
                 opts.DataZoomOpts(
                     is_show=True,
                     type_="inside",
-                    xaxis_index=[0, 1],  # 设置第0轴和第1轴同时缩放
-                    range_start=0,
-                    range_end=100,
-                ),
-                opts.DataZoomOpts(
-                    is_show=True,
-                    xaxis_index=[0, 1],
-                    type_="slider",
-                    pos_top="90%",
+                    xaxis_index=[0,1,2,3,4],  # 设置第0轴和第1轴同时缩放
                     range_start=0,
                     range_end=100,
                 ),
@@ -239,7 +231,6 @@ def draw_chart(stock_data):
 
         )
     )
-
     # 成交量柱形图
     bar_volumn = (
         Bar()
@@ -266,8 +257,8 @@ def draw_chart(stock_data):
                            )
                        ),
                        )
-            .set_global_opts(title_opts=opts.TitleOpts(title="成交量", pos_left='10%',pos_top="60%"),
-                             legend_opts=opts.LegendOpts(is_show=False),
+            .set_global_opts(title_opts=opts.TitleOpts(title="成交量", pos_left='20%',pos_top="53%"),
+                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="5%",pos_top='53%'),
                              )
     )
     #绘制均线图
@@ -299,57 +290,149 @@ def draw_chart(stock_data):
             label_opts=opts.LabelOpts(is_show=False),
         )
 
-            .set_global_opts(xaxis_opts=opts.AxisOpts(type_="category"),
+            .set_global_opts(xaxis_opts=opts.AxisOpts(type_="category",axislabel_opts=opts.LabelOpts(is_show=False),),
                              datazoom_opts=[opts.DataZoomOpts(type_="inside")],)
     )
-
+#绘制jdk线
     line_kdj = (
         Line()
             .add_xaxis(x)
             .add_yaxis(
             series_name="K",
             y_axis=stock_data[["K"]].values[:, 0].tolist(),
-            xaxis_index=1,
-            yaxis_index=1,
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
             .add_yaxis(
             series_name="D",
             y_axis=stock_data[["D"]].values[:, 0].tolist(),
-            xaxis_index=1,
-            yaxis_index=1,
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
             .add_yaxis(
             series_name="J",
             y_axis=stock_data[["J"]].values[:, 0].tolist(),
-            xaxis_index=1,
-            yaxis_index=1,
             label_opts=opts.LabelOpts(is_show=False),
         )
 
-            .set_global_opts(title_opts=opts.TitleOpts(title="KDJ", pos_left='10%',pos_top="75%"),
+            .set_global_opts(title_opts=opts.TitleOpts(title="KDJ", pos_left='20%',pos_top="65%"),
                              datazoom_opts=[opts.DataZoomOpts(type_="inside",)],
-                             legend_opts=opts.LegendOpts(is_show=False),
+                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="7%",pos_top='63%'),
+                             xaxis_opts=opts.AxisOpts(is_scale=True,axislabel_opts=opts.LabelOpts(is_show=False),),
+                             yaxis_opts=opts.AxisOpts(
+                                 is_scale=True,
+                                 splitarea_opts=opts.SplitAreaOpts(
+                                 is_show=True, areastyle_opts=opts.AreaStyleOpts(opacity=1)
+                                 ),
+                             ),
+
+                             )
+    )
+    #绘制macd柱状图
+    bar_macd=(
+        Bar().add_xaxis(x)
+        .add_yaxis(series_name='MACD',
+                   yaxis_data=stock_data[['MACD']].values[:,0].tolist(),
+                   xaxis_index=2,
+                   yaxis_index=2,
+                   label_opts=opts.LabelOpts(is_show=False),
+                   itemstyle_opts=opts.ItemStyleOpts(
+                       color=JsCode(
+                           """
+                               function(params) {
+                                   var colorList;
+                                   if (params.data >= 0) {
+                                     colorList = '#ef232a';
+                                   } else {
+                                     colorList = '#14b143';
+                                   }
+                                   return colorList;
+                               }
+                               """
+                       )
+                   ),
+                   )
+                   .set_global_opts(
+                    title_opts=opts.TitleOpts(title="MACD", pos_left='20%', pos_top="80%"),
+                    xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    grid_index=2,
+                    axislabel_opts=opts.LabelOpts(is_show=False),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                grid_index=2,
+                split_number=4,
+                axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                axistick_opts=opts.AxisTickOpts(is_show=False),
+                splitline_opts=opts.SplitLineOpts(is_show=False),
+                axislabel_opts=opts.LabelOpts(is_show=True),
+            ),
+            legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="5%",pos_top='75%'),
+        )
+    )
+    #绘制DIF和DEA
+    line_macd = (
+        Line()
+            .add_xaxis(x)
+            .add_yaxis(
+            series_name="DIF",
+            y_axis=stock_data[['DIF']].values[:,0].tolist(),
+            xaxis_index=2,
+            yaxis_index=2,
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+            .add_yaxis(
+            series_name="DEA",
+            y_axis=stock_data[['DEA']].values[:,0].tolist(),
+            xaxis_index=2,
+            yaxis_index=2,
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+            .set_global_opts(legend_opts=opts.LegendOpts(is_show=False))
+    )
+    #绘制布林线
+    line_boll = (
+        Line()
+            .add_xaxis(x)
+            .add_yaxis(
+            series_name="MID",
+            y_axis=stock_data[["MID"]].values[:, 0].tolist(),
+            linestyle_opts=opts.LineStyleOpts(opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+            .add_yaxis(
+            series_name="UPPER",
+            y_axis=stock_data[["UPPER"]].values[:, 0].tolist(),
+            linestyle_opts=opts.LineStyleOpts(opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+            .add_yaxis(
+            series_name="LOWER",
+            y_axis=stock_data[["LOWER"]].values[:, 0].tolist(),
+            linestyle_opts=opts.LineStyleOpts(opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+
+            .set_global_opts(title_opts=opts.TitleOpts(title="BOLL", pos_left='20%', pos_top="90%"),
+                             datazoom_opts=[opts.DataZoomOpts(type_="inside", )],
+                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="4.5%",pos_top='90%'),
                              xaxis_opts=opts.AxisOpts(is_scale=True),
                              yaxis_opts=opts.AxisOpts(
                                  is_scale=True,
                                  splitarea_opts=opts.SplitAreaOpts(
                                      is_show=True, areastyle_opts=opts.AreaStyleOpts(opacity=1)
                                  ),
-                             ),
-
-                             )
+                             ),)
     )
 
 
+
     overlap_kline_linema= kline.overlap(line_ma)
+    overlap_macd=bar_macd.overlap(line_macd)
     # 使用网格将多张图标组合到一起显示
     grid_chart = Grid(init_opts=opts.InitOpts(
-        width="1200px",
-        height="600px",
+        width="1400px",
+        height="700px",
         animation_opts=opts.AnimationOpts(animation=False),
     ))
 
@@ -358,18 +441,27 @@ def draw_chart(stock_data):
     grid_chart.add_js_funcs("var barData = {}".format(stock_basic_data.iloc[:, 1:5].values.tolist()))
     grid_chart.add(
         overlap_kline_linema ,
-        grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", height="50%"),
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", height="40%"),
 
     )
 
     grid_chart.add(
         bar_volumn,
-        grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", pos_top="60%", height="10%"),
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="50%", height="10%"),
     )
 
     grid_chart.add(
         line_kdj,
-        grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", pos_top="75%", height="15%")
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="65%", height="10%")
+    )
+    grid_chart.add(
+        overlap_macd,
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="77%", height="10%")
+    )
+
+    grid_chart.add(
+        line_boll,
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="89%", height="10%")
     )
 
     grid_chart.render('stock_{}.html'.format(ts_code))  # 保存成用股票代码命名的文档
@@ -380,7 +472,7 @@ def draw_chart(stock_data):
 
 if __name__ == "__main__":
     ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
-    start_date = '2019-01-01'  # 开始日期
+    start_date = '2020-01-01'  # 开始日期
     end_date = '2020-07-28'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
     # print(stock_data.head())
