@@ -187,7 +187,7 @@ def draw_chart(stock_data):
        文档地址 https://pyecharts.org/#/zh-cn/
     '''
     stock_data.index = pd.to_datetime(stock_data['TIME'], format="%Y/%m/%d")
-    x = stock_data[["TIME"]].values[:,0].tolist()
+    x = stock_data["TIME"].values.tolist()
     stock_basic_data = stock_data[["TIME", "OPEN", "CLOSE", "LOW", "HIGH", "VOLUME"]]
     # stock_data = stock_data.sort_index(ascending=True)  # 倒序，看时间顺序是否正常决定是不是要用
     # k线图
@@ -207,16 +207,17 @@ def draw_chart(stock_data):
                                                                        areastyle_opts=opts.AreaStyleOpts(opacity=1)
                                                                        ),
                                      ),  # y轴起始坐标可自动调整
-            tooltip_opts=opts.TooltipOpts(trigger="item", axis_pointer_type="line"),
+            tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="line"),
             legend_opts=opts.LegendOpts(is_show=True, orient='vertical', pos_right="5%", pos_top='20%'),
             title_opts=opts.TitleOpts(title="股票价格",
                                       subtitle=ts_code,
-                                      pos_left='20%',
+                                      pos_left='22%',
                                       pos_top="20%"),
-            axispointer_opts=opts.AxisPointerOpts(is_show=True,
-                                                  link=[{"xAxisIndex": "all"}],
-                                                  label=opts.LabelOpts(background_color="#777"),
-                                                  ),
+            #把所有的x轴连接在一起
+            # axispointer_opts=opts.AxisPointerOpts(is_show=True,
+            #                                       link=[{"xAxisIndex": "all"}],
+            #                                       label=opts.LabelOpts(background_color="#777"),
+            #                                       ),
 
             datazoom_opts=[  # 设置zoom参数后即可缩放
                 opts.DataZoomOpts(
@@ -236,7 +237,7 @@ def draw_chart(stock_data):
         Bar()
             .add_xaxis(x)
             .add_yaxis("成交量",
-                       stock_basic_data[["VOLUME"]].values[:, 0].tolist(),
+                       stock_basic_data["VOLUME"].values.tolist(),
                        xaxis_index=1,
                        yaxis_index=1,
                        label_opts=opts.LabelOpts(is_show=False),
@@ -257,8 +258,8 @@ def draw_chart(stock_data):
                            )
                        ),
                        )
-            .set_global_opts(title_opts=opts.TitleOpts(title="成交量", pos_left='20%',pos_top="53%"),
-                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="5%",pos_top='53%'),
+            .set_global_opts(title_opts=opts.TitleOpts(title="成交量", pos_left='22%',pos_top="48%"),
+                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="5%",pos_top='48%'),
                              )
     )
     #绘制均线图
@@ -267,7 +268,7 @@ def draw_chart(stock_data):
             .add_xaxis(x)
             .add_yaxis(
             series_name="MA5",
-            y_axis=stock_data[["MA5"]].values[:, 0].tolist(),
+            y_axis=stock_data["MA5"].values.tolist(),
             is_smooth=True,
             is_hover_animation=False,
             linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
@@ -275,7 +276,7 @@ def draw_chart(stock_data):
         )
             .add_yaxis(
             series_name="MA10",
-            y_axis=stock_data[["MA10"]].values[:, 0].tolist(),
+            y_axis=stock_data["MA10"].values.tolist(),
             is_smooth=True,
             is_hover_animation=False,
             linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
@@ -283,7 +284,7 @@ def draw_chart(stock_data):
         )
             .add_yaxis(
             series_name="MA20",
-            y_axis=stock_data[["MA20"]].values[:, 0].tolist(),
+            y_axis=stock_data["MA20"].values.tolist(),
             is_smooth=True,
             is_hover_animation=False,
             linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
@@ -299,25 +300,25 @@ def draw_chart(stock_data):
             .add_xaxis(x)
             .add_yaxis(
             series_name="K",
-            y_axis=stock_data[["K"]].values[:, 0].tolist(),
+            y_axis=stock_data["K"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
             .add_yaxis(
             series_name="D",
-            y_axis=stock_data[["D"]].values[:, 0].tolist(),
+            y_axis=stock_data["D"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
             .add_yaxis(
             series_name="J",
-            y_axis=stock_data[["J"]].values[:, 0].tolist(),
+            y_axis=stock_data["J"].values.tolist(),
             label_opts=opts.LabelOpts(is_show=False),
         )
 
-            .set_global_opts(title_opts=opts.TitleOpts(title="KDJ", pos_left='20%',pos_top="65%"),
+            .set_global_opts(title_opts=opts.TitleOpts(title="KDJ", pos_left='22%',pos_top="62%"),
                              datazoom_opts=[opts.DataZoomOpts(type_="inside",)],
-                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="7%",pos_top='63%'),
+                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="7%",pos_top='60%'),
                              xaxis_opts=opts.AxisOpts(is_scale=True,axislabel_opts=opts.LabelOpts(is_show=False),),
                              yaxis_opts=opts.AxisOpts(
                                  is_scale=True,
@@ -332,7 +333,7 @@ def draw_chart(stock_data):
     bar_macd=(
         Bar().add_xaxis(x)
         .add_yaxis(series_name='MACD',
-                   yaxis_data=stock_data[['MACD']].values[:,0].tolist(),
+                   yaxis_data=stock_data['MACD'].values.tolist(),
                    xaxis_index=2,
                    yaxis_index=2,
                    label_opts=opts.LabelOpts(is_show=False),
@@ -353,7 +354,7 @@ def draw_chart(stock_data):
                    ),
                    )
                    .set_global_opts(
-                    title_opts=opts.TitleOpts(title="MACD", pos_left='20%', pos_top="80%"),
+                    title_opts=opts.TitleOpts(title="MACD", pos_left='22%', pos_top="75%"),
                     xaxis_opts=opts.AxisOpts(
                     type_="category",
                     grid_index=2,
@@ -367,7 +368,7 @@ def draw_chart(stock_data):
                 splitline_opts=opts.SplitLineOpts(is_show=False),
                 axislabel_opts=opts.LabelOpts(is_show=True),
             ),
-            legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="5%",pos_top='75%'),
+            legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="5%",pos_top='70%'),
         )
     )
     #绘制DIF和DEA
@@ -376,14 +377,14 @@ def draw_chart(stock_data):
             .add_xaxis(x)
             .add_yaxis(
             series_name="DIF",
-            y_axis=stock_data[['DIF']].values[:,0].tolist(),
+            y_axis=stock_data['DIF'].values.tolist(),
             xaxis_index=2,
             yaxis_index=2,
             label_opts=opts.LabelOpts(is_show=False),
         )
             .add_yaxis(
             series_name="DEA",
-            y_axis=stock_data[['DEA']].values[:,0].tolist(),
+            y_axis=stock_data['DEA'].values.tolist(),
             xaxis_index=2,
             yaxis_index=2,
             label_opts=opts.LabelOpts(is_show=False),
@@ -396,26 +397,26 @@ def draw_chart(stock_data):
             .add_xaxis(x)
             .add_yaxis(
             series_name="MID",
-            y_axis=stock_data[["MID"]].values[:, 0].tolist(),
+            y_axis=stock_data["MID"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
             .add_yaxis(
             series_name="UPPER",
-            y_axis=stock_data[["UPPER"]].values[:, 0].tolist(),
+            y_axis=stock_data["UPPER"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
             .add_yaxis(
             series_name="LOWER",
-            y_axis=stock_data[["LOWER"]].values[:, 0].tolist(),
+            y_axis=stock_data["LOWER"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
         )
 
-            .set_global_opts(title_opts=opts.TitleOpts(title="BOLL", pos_left='20%', pos_top="90%"),
+            .set_global_opts(title_opts=opts.TitleOpts(title="BOLL", pos_left='22%', pos_top="88%"),
                              datazoom_opts=[opts.DataZoomOpts(type_="inside", )],
-                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="4.5%",pos_top='90%'),
+                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="4.5%",pos_top='85%'),
                              xaxis_opts=opts.AxisOpts(is_scale=True),
                              yaxis_opts=opts.AxisOpts(
                                  is_scale=True,
@@ -441,34 +442,33 @@ def draw_chart(stock_data):
     grid_chart.add_js_funcs("var barData = {}".format(stock_basic_data.iloc[:, 1:5].values.tolist()))
     grid_chart.add(
         overlap_kline_linema ,
-        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", height="40%"),
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="3%",height="40%"),
 
     )
 
     grid_chart.add(
         bar_volumn,
-        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="50%", height="10%"),
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="45%", height="10%"),
     )
 
     grid_chart.add(
         line_kdj,
-        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="65%", height="10%")
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="60%", height="10%")
     )
     grid_chart.add(
         overlap_macd,
-        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="77%", height="10%")
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="72%", height="10%")
     )
 
     grid_chart.add(
         line_boll,
-        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="89%", height="10%")
+        grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="85%", height="10%")
     )
 
     grid_chart.render('stock_{}.html'.format(ts_code))  # 保存成用股票代码命名的文档
 
 
     return 0
-
 
 if __name__ == "__main__":
     ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
