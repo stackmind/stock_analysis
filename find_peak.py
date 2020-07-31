@@ -20,23 +20,19 @@ end_date = '2020-07-21'  # 结束日期
 stock_data = get_basic_data(ts_code, start_date, end_date)
 x = stock_data['TIME'].values.tolist()
 close = stock_data['CLOSE'].values.tolist()
-x_=stock_data['TIME'].values
-close_= stock_data['CLOSE'].values
-choose_data=[]
-for i in signal.argrelextrema(close_,np.greater)[0]:
-    choose_data.append(x[i])
-choose_close = close[signal.argrelextrema(close,np.greater)]
-print(choose_data)
-print(choose_close)
-print(len(choose_data),len(choose_close))
-print(type(choose_data),type(choose_close))
+close_valley=[-x for x in close]
+print(close)
+print(close_valley)
 
-# plt.figure(figsize=(12,4))
-# plt.plot(np.arange(len(x)),x)
-# plt.plot(signal.argrelextrema(x,np.greater)[0],x[signal.argrelextrema(x, np.greater)],'o')
-# plt.plot(signal.argrelextrema(-x,np.greater)[0],x[signal.argrelextrema(-x, np.greater)],'+')
-#
-# plt.show()
+close_peaks=[]
+indexes, _ = signal.find_peaks(close, distance=1)
+print(indexes)
+indexes_valley, _ = signal.find_peaks(close_valley, distance=1)
+print(indexes_valley)
+for i in indexes:
+    close_peaks.append(close[i])
+print(close_peaks)
+print(len(indexes),len(close_peaks))
 
 line = (
     Line()
@@ -52,10 +48,10 @@ line = (
         datazoom_opts=[opts.DataZoomOpts(type_="inside")],)
 
 )
-scatter = (
+scatter_top = (
     Scatter()
-        .add_xaxis(choose_data)
-        .add_yaxis('Close',choose_close,label_opts=opts.LabelOpts(is_show=False),)
+        .add_xaxis(indexes.tolist())
+        .add_yaxis('Close',close_peaks,label_opts=opts.LabelOpts(is_show=False),)
         .set_global_opts(xaxis_opts=opts.AxisOpts(is_scale=True),
         yaxis_opts=opts.AxisOpts(
             is_scale=True,
@@ -64,9 +60,10 @@ scatter = (
             ),
         ),
         datazoom_opts=[opts.DataZoomOpts(type_="inside")],)
-
 )
-overlap_findpeak= line.overlap(scatter)
+
+
+overlap_findpeak= line.overlap(scatter_top)
 
 grid_chart = Grid(init_opts=opts.InitOpts(
         width="1400px",
@@ -74,17 +71,11 @@ grid_chart = Grid(init_opts=opts.InitOpts(
         animation_opts=opts.AnimationOpts(animation=False),
     ))
 grid_chart.add(
-        line,
+        overlap_findpeak,
         grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", pos_top="10%"),
     )
 
-grid_chart.add(
-        scatter,
-        grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", pos_top="10%"),
-    )
+grid_chart.render('find_peak.html')
+wb.open('find_peak.html')
 
-# grid_chart.render('find_peak.html')
-# wb.open('find_peak.html')
-scatter.render('scatter.html')
-wb.open('scatter.html')
 
