@@ -25,14 +25,18 @@ print(close)
 print(close_valley)
 
 close_peaks=[]
+close_valleys=[]
 indexes, _ = signal.find_peaks(close, distance=1)
 print(indexes)
 indexes_valley, _ = signal.find_peaks(close_valley, distance=1)
 print(indexes_valley)
 for i in indexes:
     close_peaks.append(close[i])
+for i in indexes_valley:
+    close_valleys.append(close[i])
 print(close_peaks)
-print(len(indexes),len(close_peaks))
+print(close_valleys)
+print(len(close_valleys),len(close_peaks))
 
 line = (
     Line()
@@ -50,8 +54,8 @@ line = (
 )
 scatter_top = (
     Scatter()
-        .add_xaxis(indexes.tolist())
-        .add_yaxis('Close',close_peaks,label_opts=opts.LabelOpts(is_show=False),)
+        .add_xaxis(indexes_valley.tolist())
+        .add_yaxis('Close',close_valleys,label_opts=opts.LabelOpts(is_show=False),)
         .set_global_opts(xaxis_opts=opts.AxisOpts(is_scale=True),
         yaxis_opts=opts.AxisOpts(
             is_scale=True,
