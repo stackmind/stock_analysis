@@ -23,10 +23,11 @@ def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据�
         print('本次股票基本数据使用本地数据。')
     else:
         w.start()
-        error, basic_data = w.wsd(ts_code, "open,high,low,close,volume", start_date, end_date, usedf=True)
+        error, basic_data = w.wsd(ts_code, "open,high,low,close,volume", start_date, end_date,"PriceAdj=F", usedf=True)
         w.close()
         if error != 0:
             raise AssertionError("API数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error, basic_data.values[0][0]))
+        basic_data.fillna(0, inplace=True)
         basic_data.to_csv('stock_basic_{}.csv'.format(ts_code), index_label='TIME')
         stock_basic_data = pd.read_csv('stock_basic_{}.csv'.format(ts_code))
        # print(stock_basic_data.head())#查看前几行数据
@@ -43,9 +44,9 @@ def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列�
         print('本次KDJ使用本地数据。')
     else:
         w.start()
-        error1, k_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=1", usedf=True)
-        error2, d_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=2", usedf=True)
-        error3, j_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=3", usedf=True)
+        error1, k_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=1;PriceAdj=F", usedf=True)
+        error2, d_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=2;PriceAdj=F", usedf=True)
+        error3, j_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=3;PriceAdj=F", usedf=True)
         w.close()
         if error1 != 0:
             raise AssertionError("K数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, k_data.values[0][0]))
@@ -59,6 +60,7 @@ def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列�
 
         kdj_data = k_data.join(d_data).join(j_data)
         # print(kdj_data.head())
+        kdj_data.fillna(0, inplace=True)
         kdj_data.to_csv('stock_kdj_{}.csv'.format(ts_code), index_label='TIME')
         stock_kdj_data = pd.read_csv('stock_kdj_{}.csv'.format(ts_code))
         print('本次KGJ数据从Windpy网络获取。')
@@ -74,9 +76,9 @@ def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分�
         print('本次MA使用本地数据。')
     else:
         w.start()
-        error1, ma5_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=5", usedf=True)
-        error2, ma10_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=10", usedf=True)
-        error3, ma20_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=20", usedf=True)
+        error1, ma5_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=5;PriceAdj=F", usedf=True)
+        error2, ma10_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=10;PriceAdj=F", usedf=True)
+        error3, ma20_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=20;PriceAdj=F", usedf=True)
         w.close()
         if error1 != 0:
             raise AssertionError("ma5数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, ma5_data.values[0][0]))
@@ -90,6 +92,7 @@ def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分�
 
         ma_data = ma5_data.join(ma10_data).join(ma20_data)
         # print(ma_data.head())
+        ma_data.fillna(0, inplace=True)
         ma_data.to_csv('stock_ma_{}.csv'.format(ts_code), index_label='TIME')
         stock_ma_data = pd.read_csv('stock_ma_{}.csv'.format(ts_code))
         print('本次MA数据从Windpy网络获取。')
@@ -105,11 +108,11 @@ def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别�
         print('本次MACD使用本地数据。')
     else:
         w.start()
-        error1, dif_data = w.wsd(ts_code, "MACD", start_date, end_date, "MACD_L=26;MACD_S=12;MACD_N=9;MACD_IO=1",
+        error1, dif_data = w.wsd(ts_code, "MACD", start_date, end_date, "MACD_L=26;MACD_S=12;MACD_N=9;MACD_IO=1;PriceAdj=F",
                                  usedf=True)
-        error2, dea_data = w.wsd(ts_code, "MACD", start_date, end_date, "MACD_L=26;MACD_S=12;MACD_N=9;MACD_IO=2",
+        error2, dea_data = w.wsd(ts_code, "MACD", start_date, end_date, "MACD_L=26;MACD_S=12;MACD_N=9;MACD_IO=2;PriceAdj=F",
                                  usedf=True)
-        error3, macd0_data = w.wsd(ts_code, "MACD", start_date, end_date, "MACD_L=26;MACD_S=12;MACD_N=9;MACD_IO=3",
+        error3, macd0_data = w.wsd(ts_code, "MACD", start_date, end_date, "MACD_L=26;MACD_S=12;MACD_N=9;MACD_IO=3;PriceAdj=F",
                                    usedf=True)
         w.close()
         if error1 != 0:
@@ -126,6 +129,7 @@ def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别�
         # print(macd0_data.head())
         macd_data = dif_data.join(dea_data).join(macd0_data)
         # print(macd_data.head())
+        macd_data.fillna(0, inplace=True)
         macd_data.to_csv('stock_macd_{}.csv'.format(ts_code), index_label='TIME')
         stock_macd_data = pd.read_csv('stock_macd_{}.csv'.format(ts_code))
         print('本次MACD数据从Windpy网络获取。')
@@ -141,9 +145,9 @@ def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是
         print('本次BOLL使用本地数据。')
     else:
         w.start()
-        error1, mid_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=1", usedf=True)
-        error2, upper_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=2",usedf=True)
-        error3, lower_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=3",usedf=True)
+        error1, mid_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=1;PriceAdj=F", usedf=True)
+        error2, upper_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=2;PriceAdj=F",usedf=True)
+        error3, lower_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=3;PriceAdj=F",usedf=True)
         w.close()
         if error1 != 0:
             raise AssertionError("MID数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, mid_data.values[0][0]))
@@ -157,6 +161,7 @@ def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是
 
         boll_data = mid_data.join(upper_data).join(lower_data)
         # print(boll_data.head())
+        boll_data.fillna(0, inplace=True)
         boll_data.to_csv('stock_boll_{}.csv'.format(ts_code), index_label='TIME')
         stock_boll_data = pd.read_csv('stock_boll_{}.csv'.format(ts_code))
         print('本次BOLL数据从Windpy网络获取。')
@@ -269,30 +274,41 @@ def draw_chart(stock_data):
             .add_yaxis(
             series_name="MA5",
             y_axis=stock_data["MA5"].values.tolist(),
-            is_smooth=True,
+
             is_hover_animation=False,
-            linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+            # linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
             .add_yaxis(
             series_name="MA10",
             y_axis=stock_data["MA10"].values.tolist(),
-            is_smooth=True,
+
             is_hover_animation=False,
-            linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
             .add_yaxis(
             series_name="MA20",
             y_axis=stock_data["MA20"].values.tolist(),
-            is_smooth=True,
+
             is_hover_animation=False,
-            linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
 
-            .set_global_opts(xaxis_opts=opts.AxisOpts(type_="category",axislabel_opts=opts.LabelOpts(is_show=False),),
-                             datazoom_opts=[opts.DataZoomOpts(type_="inside")],)
+            .set_global_opts(title_opts=opts.TitleOpts(title="MA", pos_left='22%', pos_top="88%"),
+                             xaxis_opts=opts.AxisOpts(type_="category",axislabel_opts=opts.LabelOpts(is_show=False),is_scale=True),
+                             datazoom_opts=[opts.DataZoomOpts(type_="inside")],
+                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="5%",pos_top='85%'),
+                             yaxis_opts=opts.AxisOpts(
+                                 is_scale=True,
+                                 splitarea_opts=opts.SplitAreaOpts(
+                                 is_show=True, areastyle_opts=opts.AreaStyleOpts(opacity=1)
+                                 ),
+                             ),)
     )
 #绘制jdk线
     line_kdj = (
@@ -303,17 +319,20 @@ def draw_chart(stock_data):
             y_axis=stock_data["K"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
             .add_yaxis(
             series_name="D",
             y_axis=stock_data["D"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
             .add_yaxis(
             series_name="J",
             y_axis=stock_data["J"].values.tolist(),
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
 
             .set_global_opts(title_opts=opts.TitleOpts(title="KDJ", pos_left='22%',pos_top="62%"),
@@ -381,6 +400,7 @@ def draw_chart(stock_data):
             xaxis_index=2,
             yaxis_index=2,
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
             .add_yaxis(
             series_name="DEA",
@@ -388,6 +408,7 @@ def draw_chart(stock_data):
             xaxis_index=2,
             yaxis_index=2,
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show=False,
         )
             .set_global_opts(legend_opts=opts.LegendOpts(is_show=False))
     )
@@ -400,23 +421,26 @@ def draw_chart(stock_data):
             y_axis=stock_data["MID"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
             .add_yaxis(
             series_name="UPPER",
             y_axis=stock_data["UPPER"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
             .add_yaxis(
             series_name="LOWER",
             y_axis=stock_data["LOWER"].values.tolist(),
             linestyle_opts=opts.LineStyleOpts(opacity=0.5),
             label_opts=opts.LabelOpts(is_show=False),
+            is_symbol_show = False,
         )
 
-            .set_global_opts(title_opts=opts.TitleOpts(title="BOLL", pos_left='22%', pos_top="88%"),
+            .set_global_opts(
                              datazoom_opts=[opts.DataZoomOpts(type_="inside", )],
-                             legend_opts=opts.LegendOpts(is_show=True,orient='vertical',pos_right="4.5%",pos_top='85%'),
+
                              xaxis_opts=opts.AxisOpts(is_scale=True),
                              yaxis_opts=opts.AxisOpts(
                                  is_scale=True,
@@ -428,7 +452,7 @@ def draw_chart(stock_data):
 
 
 
-    overlap_kline_linema= kline.overlap(line_ma)
+    overlap_kline_linema= kline.overlap(line_boll)
     overlap_macd=bar_macd.overlap(line_macd)
     # 使用网格将多张图标组合到一起显示
     grid_chart = Grid(init_opts=opts.InitOpts(
@@ -461,7 +485,7 @@ def draw_chart(stock_data):
     )
 
     grid_chart.add(
-        line_boll,
+        line_ma,
         grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="85%", height="10%")
     )
 
@@ -472,7 +496,7 @@ def draw_chart(stock_data):
 
 if __name__ == "__main__":
     ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
-    start_date = '2020-01-01'  # 开始日期
+    start_date = '2016-01-01'  # 开始日期
     end_date = '2020-07-28'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
     # print(stock_data.head())
