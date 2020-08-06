@@ -12,6 +12,7 @@ from stock_analysis import get_process_datas
 from pyecharts.charts import Line,Grid,Scatter,Kline
 from pyecharts import options as opts
 import webbrowser as wb
+import pandas as pd
 
 def get_line_peaks(df):
     line = df.values.tolist()
@@ -270,7 +271,7 @@ def get_index_by_boll(stock_data):
             valleys_callback_between_mid_and_lower.append(indexes_valleys[i])
 
         else:
-            print('有异常点')
+            print('有异常点',indexes_peaks[i])
     print('在布林线中轨以上回调的峰谷值:')
     print(peaks_callback_between_mid_and_upper)
     print(valleys_callback_between_mid_and_upper)
@@ -293,10 +294,11 @@ def MaxDrawdown(return_list):
 
 
 if __name__ == '__main__':
-    ts_code = '300347.SZ'  # 此处填写股票号'000661.SZ' '300347.SZ' '688399.SH'
-    start_date = '2016-01-01'  # 开始日期
-    end_date = '2020-07-21'  # 结束日期
+    ts_code = '300497.SZ'  # 此处填写股票号'000661.SZ' '300347.SZ' '688399.SH'
+    start_date = '2015-12-22'  # 开始日期
+    end_date = '2020-08-01'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
+    print(stock_data.head())
     draw_charts(stock_data)
     wb.open('find_peak.html')
 
@@ -307,7 +309,24 @@ if __name__ == '__main__':
     valleys_callback_between_mid_and_upper, \
     valleys_callback_between_mid_and_lower=get_index_by_boll(stock_data)  #获取不同分类点的index
 
-    
+    df1=stock_data.loc[peaks_callback_from_upper_to_lower]
+    df2=stock_data.loc[peaks_callback_between_mid_and_upper]
+    df3=stock_data.loc[peaks_callback_between_mid_and_lower]
+    # print(stock_data.loc[767])
+    df1['LABEL']=0
+    df2['LABEL']=1
+    df3['LABEL']=2
+    frames=[df1,df2,df3]
+    result = pd.concat(frames)
+    #
+    # print(df1)
+    # print(df2)
+    # print(df3)
+    #
+    # print(result)
+
+    result.to_csv('peaks_result_{}.csv'.format(ts_code))
+
 
     return_list=stock_data['CLOSE'].values.tolist()
     print('最大回撤率：',MaxDrawdown(return_list))

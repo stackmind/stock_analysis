@@ -29,7 +29,7 @@ def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据�
             raise AssertionError("API数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error, basic_data.values[0][0]))
         basic_data.fillna(0, inplace=True)
         basic_data.to_csv('stock_basic_{}.csv'.format(ts_code), index_label='TIME')
-        stock_basic_data = pd.read_csv('stock_basic_{}.csv'.format(ts_code))
+        stock_basic_data = pd.read_csv('stock_basic_{}.csv'.format(ts_code), index_col=0)
        # print(stock_basic_data.head())#查看前几行数据
         print('本次股票基本数据从Windpy网络获取。')
 
@@ -62,7 +62,7 @@ def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列�
         # print(kdj_data.head())
         kdj_data.fillna(0, inplace=True)
         kdj_data.to_csv('stock_kdj_{}.csv'.format(ts_code), index_label='TIME')
-        stock_kdj_data = pd.read_csv('stock_kdj_{}.csv'.format(ts_code))
+        stock_kdj_data = pd.read_csv('stock_kdj_{}.csv'.format(ts_code),index_col=0)
         print('本次KGJ数据从Windpy网络获取。')
 
     return stock_kdj_data
@@ -94,7 +94,7 @@ def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分�
         # print(ma_data.head())
         ma_data.fillna(0, inplace=True)
         ma_data.to_csv('stock_ma_{}.csv'.format(ts_code), index_label='TIME')
-        stock_ma_data = pd.read_csv('stock_ma_{}.csv'.format(ts_code))
+        stock_ma_data = pd.read_csv('stock_ma_{}.csv'.format(ts_code),index_col=0)
         print('本次MA数据从Windpy网络获取。')
 
     return stock_ma_data
@@ -131,7 +131,7 @@ def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别�
         # print(macd_data.head())
         macd_data.fillna(0, inplace=True)
         macd_data.to_csv('stock_macd_{}.csv'.format(ts_code), index_label='TIME')
-        stock_macd_data = pd.read_csv('stock_macd_{}.csv'.format(ts_code))
+        stock_macd_data = pd.read_csv('stock_macd_{}.csv'.format(ts_code),index_col=0)
         print('本次MACD数据从Windpy网络获取。')
 
     return stock_macd_data
@@ -163,14 +163,14 @@ def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是
         # print(boll_data.head())
         boll_data.fillna(0, inplace=True)
         boll_data.to_csv('stock_boll_{}.csv'.format(ts_code), index_label='TIME')
-        stock_boll_data = pd.read_csv('stock_boll_{}.csv'.format(ts_code))
+        stock_boll_data = pd.read_csv('stock_boll_{}.csv'.format(ts_code),index_col=0)
         print('本次BOLL数据从Windpy网络获取。')
     return stock_boll_data
 
 def get_process_datas(ts_code, start_date, end_date):#合并获得的数据
     if (os.path.exists('stock_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
-        stock_data = pd.read_csv('stock_{}.csv'.format(ts_code))
+        stock_data = pd.read_csv('stock_{}.csv'.format(ts_code),index_col=0)
         print('本次使用本地数据。')
     else:
         stock_basic_data = get_basic_data(ts_code, start_date, end_date)
@@ -495,9 +495,9 @@ def draw_chart(stock_data):
     return 0
 
 if __name__ == "__main__":
-    ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
-    start_date = '2016-01-01'  # 开始日期
-    end_date = '2020-07-28'  # 结束日期
+    ts_code = '300497.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
+    start_date = '2015-12-22'  # 开始日期
+    end_date = '2020-08-01'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
     # print(stock_data.head())
     draw_chart(stock_data)
