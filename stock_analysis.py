@@ -10,16 +10,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from pyecharts.charts import Page, Kline, Bar, Grid, Line
+from pyecharts.charts import Page, Kline, Bar, Grid, Line,Scatter
 from pyecharts import options as opts
 import webbrowser as wb
 from pyecharts.commons.utils import JsCode
 
 def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据，包括开盘价，最高价，最低价，收盘价，成交量
 
-    if (os.path.exists('stock_basic_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+    if (os.path.exists('stock_{}/stock_basic_{}.csv'.format(ts_code,ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
-        stock_basic_data = pd.read_csv('stock_basic_{}.csv'.format(ts_code))
+        stock_basic_data = pd.read_csv('stock_{}/stock_basic_{}.csv'.format(ts_code,ts_code))
         print('本次股票基本数据使用本地数据。')
     else:
         w.start()
@@ -28,8 +28,14 @@ def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据�
         if error != 0:
             raise AssertionError("API数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error, basic_data.values[0][0]))
         basic_data.fillna(0, inplace=True)
-        basic_data.to_csv('stock_basic_{}.csv'.format(ts_code), index_label='TIME')
-        stock_basic_data = pd.read_csv('stock_basic_{}.csv'.format(ts_code), index_col=0)
+        if os.path.exists('stock_{}'.format(ts_code)):
+            basic_data.to_csv('stock_{}/stock_basic_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+        else:
+            os.makedirs('stock_{}'.format(ts_code))
+            basic_data.to_csv('stock_{}/stock_basic_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+
+        basic_data.to_csv('stock_{}/stock_basic_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+        stock_basic_data = pd.read_csv('stock_{}/stock_basic_{}.csv'.format(ts_code,ts_code))
        # print(stock_basic_data.head())#查看前几行数据
         print('本次股票基本数据从Windpy网络获取。')
 
@@ -38,9 +44,9 @@ def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据�
 
 def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列，分别是K线，D线，J线
 
-    if (os.path.exists('stock_kdj_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+    if (os.path.exists('stock_{}/stock_kdj_{}.csv'.format(ts_code,ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
-        stock_kdj_data = pd.read_csv('stock_kdj_{}.csv'.format(ts_code))
+        stock_kdj_data = pd.read_csv('stock_{}/stock_kdj_{}.csv'.format(ts_code,ts_code))
         print('本次KDJ使用本地数据。')
     else:
         w.start()
@@ -61,8 +67,13 @@ def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列�
         kdj_data = k_data.join(d_data).join(j_data)
         # print(kdj_data.head())
         kdj_data.fillna(0, inplace=True)
-        kdj_data.to_csv('stock_kdj_{}.csv'.format(ts_code), index_label='TIME')
-        stock_kdj_data = pd.read_csv('stock_kdj_{}.csv'.format(ts_code),index_col=0)
+        if os.path.exists('stock_{}'.format(ts_code)):
+            kdj_data.to_csv('stock_{}/stock_kdj_{}.csv'.format(ts_code, ts_code), index_label='TIME')
+        else:
+            os.makedirs('stock_{}'.format(ts_code))
+            kdj_data.to_csv('stock_{}/stock_kdj_{}.csv'.format(ts_code, ts_code), index_label='TIME')
+
+        stock_kdj_data = pd.read_csv('stock_{}/stock_kdj_{}.csv'.format(ts_code,ts_code))
         print('本次KGJ数据从Windpy网络获取。')
 
     return stock_kdj_data
@@ -70,9 +81,9 @@ def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列�
 
 def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分别是5日，10日，20日
 
-    if (os.path.exists('stock_ma_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+    if (os.path.exists('stock_{}/stock_ma_{}.csv'.format(ts_code,ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
-        stock_ma_data = pd.read_csv('stock_ma_{}.csv'.format(ts_code))
+        stock_ma_data = pd.read_csv('stock_{}/stock_ma_{}.csv'.format(ts_code,ts_code))
         print('本次MA使用本地数据。')
     else:
         w.start()
@@ -93,8 +104,14 @@ def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分�
         ma_data = ma5_data.join(ma10_data).join(ma20_data)
         # print(ma_data.head())
         ma_data.fillna(0, inplace=True)
-        ma_data.to_csv('stock_ma_{}.csv'.format(ts_code), index_label='TIME')
-        stock_ma_data = pd.read_csv('stock_ma_{}.csv'.format(ts_code),index_col=0)
+        if os.path.exists('stock_{}'.format(ts_code)):
+            ma_data.to_csv('stock_{}/stock_ma_{}.csv'.format(ts_code, ts_code), index_label='TIME')
+        else:
+            os.makedirs('stock_{}'.format(ts_code))
+            ma_data.to_csv('stock_{}/stock_ma_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+
+
+        stock_ma_data = pd.read_csv('stock_{}/stock_ma_{}.csv'.format(ts_code,ts_code))
         print('本次MA数据从Windpy网络获取。')
 
     return stock_ma_data
@@ -102,9 +119,9 @@ def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分�
 
 def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别是DIF,DEA,MACD
 
-    if (os.path.exists('stock_macd_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+    if (os.path.exists('stock_{}/stock_macd_{}.csv'.format(ts_code,ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
-        stock_macd_data = pd.read_csv('stock_macd_{}.csv'.format(ts_code))
+        stock_macd_data = pd.read_csv('stock_{}/stock_macd_{}.csv'.format(ts_code,ts_code))
         print('本次MACD使用本地数据。')
     else:
         w.start()
@@ -130,8 +147,13 @@ def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别�
         macd_data = dif_data.join(dea_data).join(macd0_data)
         # print(macd_data.head())
         macd_data.fillna(0, inplace=True)
-        macd_data.to_csv('stock_macd_{}.csv'.format(ts_code), index_label='TIME')
-        stock_macd_data = pd.read_csv('stock_macd_{}.csv'.format(ts_code),index_col=0)
+        if os.path.exists('stock_{}'.format(ts_code)):
+            macd_data.to_csv('stock_{}/stock_macd_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+        else:
+            os.makedirs('stock_{}'.format(ts_code))
+            macd_data.to_csv('stock_{}/stock_macd_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+
+        stock_macd_data = pd.read_csv('stock_{}/stock_macd_{}.csv'.format(ts_code,ts_code))
         print('本次MACD数据从Windpy网络获取。')
 
     return stock_macd_data
@@ -139,9 +161,9 @@ def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别�
 
 def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是MID，UPPER,LOWER
 
-    if (os.path.exists('stock_boll_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+    if (os.path.exists('stock_{}/stock_boll_{}.csv'.format(ts_code,ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
-        stock_boll_data = pd.read_csv('stock_boll_{}.csv'.format(ts_code))
+        stock_boll_data = pd.read_csv('stock_{}/stock_boll_{}.csv'.format(ts_code,ts_code))
         print('本次BOLL使用本地数据。')
     else:
         w.start()
@@ -162,15 +184,72 @@ def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是
         boll_data = mid_data.join(upper_data).join(lower_data)
         # print(boll_data.head())
         boll_data.fillna(0, inplace=True)
-        boll_data.to_csv('stock_boll_{}.csv'.format(ts_code), index_label='TIME')
-        stock_boll_data = pd.read_csv('stock_boll_{}.csv'.format(ts_code),index_col=0)
+        if os.path.exists('stock_{}'.format(ts_code)):
+            boll_data.to_csv('stock_{}/stock_boll_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+        else:
+            os.makedirs('stock_{}'.format(ts_code))
+            boll_data.to_csv('stock_{}/stock_boll_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+
+        stock_boll_data = pd.read_csv('stock_{}/stock_boll_{}.csv'.format(ts_code,ts_code))
         print('本次BOLL数据从Windpy网络获取。')
     return stock_boll_data
 
-def get_process_datas(ts_code, start_date, end_date):#合并获得的数据
-    if (os.path.exists('stock_{}.csv'.format(ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+def get_daykline_situation(ts_code, start_date, end_date):#获得每日60分钟线数据
+    if (os.path.exists('stock_{}/stock_dailychange_{}.csv'.format(ts_code,ts_code))):  # 判断本地是否存在文档，若没有则调用接口
         # 将数据保存到本地csv文件
-        stock_data = pd.read_csv('stock_{}.csv'.format(ts_code),index_col=0)
+        stock_daily_data = pd.read_csv('stock_{}/stock_dailychange_{}.csv'.format(ts_code,ts_code))
+        print('本次日内数据使用本地数据。')
+    else:
+        w.start()
+        error, daily_data = w.wsi(ts_code, "chg", start_date+' 09:00:00', end_date+' 15:31:00', "BarSize=60;PriceAdj=F",
+                                 usedf=True)
+        w.close()
+        if error != 0:
+            raise AssertionError("日内数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error, daily_data.values[0][0]))
+        daily_data.fillna(0, inplace=True)
+        if os.path.exists('stock_{}'.format(ts_code)):
+            daily_data.to_csv('stock_{}/stock_dailychange_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+        else:
+            os.makedirs('stock_{}'.format(ts_code))
+            daily_data.to_csv('stock_{}/stock_dailychange_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+        stock_daily_data = pd.read_csv('stock_{}/stock_dailychange_{}.csv'.format(ts_code,ts_code))
+        print('本次日内数据从Windpy网络获取。')
+
+    return stock_daily_data
+
+def find_daily_situation(ts_code, start_date, end_date):#将日线中出现三阴一阳和三阴一阴情况的日子标为1，其他标为0，存入csv的stock analysis文件中。
+    daily_data = get_daykline_situation(ts_code, start_date, end_date)
+    stock_data = get_process_datas(ts_code, start_date, end_date)
+    daily_data['TIME'] = pd.to_datetime(daily_data['TIME'])
+    index_temp = daily_data['TIME'].dt.date.drop_duplicates()#舍去时分秒，去除重复项
+    indexes = index_temp.apply(lambda x: x.strftime('%Y-%m-%d')).tolist()
+    daily_data = daily_data.set_index('TIME')
+
+    data = []
+    for i in indexes:
+        daily = daily_data[i]['change'].values.tolist()
+        if (daily[0] > 0 and daily[1] > 0 and daily[2] > 0 and daily[3] < 0) or (
+                daily[0] < 0 and daily[1] < 0 and daily[2] < 0 and daily[3] > 0):
+            data.append(i)#寻找三阴一阳和三阳一阴
+
+    stock_data = stock_data.set_index('TIME')
+    stock_data['is31situation']=0
+    # print(stock_data[:10])
+    # print(stock_data.loc[data])
+    stock_data.loc[data,'is31situation']=1
+
+    stock_data.to_csv('stock_{}/stock_analysis_{}.csv'.format(ts_code,ts_code), index_label='TIME')
+
+    return data
+
+
+def find_market_situation():
+    pass
+
+def get_process_datas(ts_code, start_date, end_date):#合并获得的数据
+    if (os.path.exists('stock_{}/stock_{}.csv'.format(ts_code,ts_code))):  # 判断本地是否存在文档，若没有则调用接口
+        # 将数据保存到本地csv文件
+        stock_data = pd.read_csv('stock_{}/stock_{}.csv'.format(ts_code,ts_code),index_col=0)
         print('本次使用本地数据。')
     else:
         stock_basic_data = get_basic_data(ts_code, start_date, end_date)
@@ -182,7 +261,7 @@ def get_process_datas(ts_code, start_date, end_date):#合并获得的数据
         stock_data = pd.merge(stock_data,stock_kdj_data)
         stock_data = pd.merge(stock_data,stock_macd_data)
         stock_data = pd.merge(stock_data,stock_boll_data)
-        stock_data.to_csv('stock_{}.csv'.format(ts_code))
+        stock_data.to_csv('stock_{}/stock_{}.csv'.format(ts_code,ts_code))
         print('本次数据从Windpy网络获取。')
     return stock_data
 
@@ -489,20 +568,19 @@ def draw_chart(stock_data):
         grid_opts=opts.GridOpts(pos_left="35%", pos_right="15%", pos_top="85%", height="10%")
     )
 
-    grid_chart.render('stock_{}.html'.format(ts_code))  # 保存成用股票代码命名的文档
-
-
+    grid_chart.render('stock_{}/stock_{}.html'.format(ts_code,ts_code))  # 保存成用股票代码命名的文档
     return 0
 
 if __name__ == "__main__":
-    ts_code = '300497.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
-    start_date = '2015-12-22'  # 开始日期
+    ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
+    start_date = '2017-08-10'  # 开始日期
     end_date = '2020-08-01'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
+
     # print(stock_data.head())
     draw_chart(stock_data)
-    wb.open('stock_{}.html'.format(ts_code))
-
+    wb.open('stock_{}\/stock_{}.html'.format(ts_code,ts_code))
+    find_daily_situation(ts_code, start_date, end_date)
 
 
 

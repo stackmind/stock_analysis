@@ -8,7 +8,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as signal
-from stock_analysis import get_process_datas
+from stock_analysis import get_process_datas,find_daily_situation
 from pyecharts.charts import Line,Grid,Scatter,Kline
 from pyecharts import options as opts
 import webbrowser as wb
@@ -33,17 +33,17 @@ def get_line_valleys(df):
     # print(len(line_valleys))  # 查看极大值极小值序列长度，是不是成对出现
     return indexes_valleys.tolist(),line_valleys
 
-def draw_charts(stock_data):
+def draw_charts(stock_data,name):
 
     x = stock_data['TIME'].values.tolist()
-    y = stock_data['MA5'].values.tolist()
-    indexes_peaks, line_peaks=get_line_peaks(stock_data['MA5'])
-    indexes_valleys, line_valleys=get_line_valleys(stock_data['MA5'])
+    y = stock_data[name].values.tolist()
+    indexes_peaks, line_peaks=get_line_peaks(stock_data[name])
+    indexes_valleys, line_valleys=get_line_valleys(stock_data[name])
 
     line = (
         Line()
             .add_xaxis(x)
-            .add_yaxis('五日均线', y, label_opts=opts.LabelOpts(is_show=False), is_symbol_show=False, )
+            .add_yaxis('收盘价', y, label_opts=opts.LabelOpts(is_show=False), is_symbol_show=False, )
             .set_global_opts(xaxis_opts=opts.AxisOpts(is_scale=True),
                              yaxis_opts=opts.AxisOpts(
                                  is_scale=True,
@@ -167,7 +167,7 @@ def draw_charts(stock_data):
     line_close = (
         Line()
             .add_xaxis(x)
-            .add_yaxis('CLOSE', stock_data["CLOSE"].values.tolist(), label_opts=opts.LabelOpts(is_show=False),
+            .add_yaxis('五日均线', stock_data["MA5"].values.tolist(), label_opts=opts.LabelOpts(is_show=False),
                        is_symbol_show=False, )
             .set_global_opts(xaxis_opts=opts.AxisOpts(is_scale=True),
                              yaxis_opts=opts.AxisOpts(
@@ -197,7 +197,7 @@ def draw_charts(stock_data):
         grid_opts=opts.GridOpts(pos_left="25%", pos_right="15%", pos_top="10%"),
     )
 
-    grid_chart.render('find_peak.html')
+    grid_chart.render('stock_{}/find_peak.html'.format(ts_code))
 
 def show_index_by_boll(stock_data,indexes):
 
@@ -225,10 +225,10 @@ def show_index_by_boll(stock_data,indexes):
     print('在布林线中轨下轨间的点：',len(index_between_mid_and_lower), index_between_mid_and_lower)
     print('在布林线下轨下的点：',len(index_below_lowwer), index_below_lowwer)
 
-def get_index_by_boll(stock_data):
+def get_index_by_boll(stock_data,name):
 
-    indexes_peaks, values_peaks = get_line_peaks(stock_data['MA5'])  # 获得所有的峰值点
-    indexes_valleys, values_valleys = get_line_valleys(stock_data['MA5'])  # 获得所有的谷值点
+    indexes_peaks, values_peaks = get_line_peaks(stock_data[name])  # 获得所有的峰值点
+    indexes_valleys, values_valleys = get_line_valleys(stock_data[name])  # 获得所有的谷值点
 
     show_index_by_boll(stock_data, indexes_peaks)  # 查看峰值点的分布
     print('-' * 50)
@@ -246,7 +246,7 @@ def get_index_by_boll(stock_data):
     print(len(indexes_valleys), indexes_valleys)
 
     mid = stock_data['MID'].values.tolist()
-    line = stock_data['MA5'].values.tolist()  # 寻找极大值极小值的曲线
+    line = stock_data[name].values.tolist()  # 寻找极大值极小值的曲线
 
     peaks_callback_from_upper_to_lower = []  # 从布林线中轨以上回调到中轨以下的峰值index
     peaks_callback_between_mid_and_upper = []  # 在布林线中轨以上回调的峰值index
@@ -281,7 +281,104 @@ def get_index_by_boll(stock_data):
     print('在布林线中轨以下回调的峰谷值:')
     print(peaks_callback_between_mid_and_lower)
     print(valleys_callback_between_mid_and_lower)
-    return peaks_callback_from_upper_to_lower ,peaks_callback_between_mid_and_upper,peaks_callback_between_mid_and_lower,valleys_callback_from_upper_to_lower,valleys_callback_between_mid_and_upper,valleys_callback_between_mid_and_lower
+    return peaks_callback_from_upper_to_lower ,peaks_callback_between_mid_and_upper,peaks_callback_between_mid_and_lower
+
+def get_index_by_callback_proportion(stock_data,name):
+    indexes_peaks, values_peaks = get_line_peaks(stock_data[name])  # 获得所有的峰值点
+    indexes_valleys, values_valleys = get_line_valleys(stock_data[name])  # 获得所有的谷值点
+    line = stock_data[name].values.tolist()  # 寻找极大值极小值的曲线
+
+    print('数据调整前的峰谷值：')
+    print(len(indexes_peaks), indexes_peaks)
+    print(len(indexes_valleys), indexes_valleys)
+    # 极大值和极小值交替出现，确保峰值在前，谷值在后，序列以峰值开头，以谷值结束
+    if (indexes_valleys[0] < indexes_peaks[0]):
+        indexes_valleys.pop(0)
+    if (indexes_valleys[-1] < indexes_peaks[-1]):
+        indexes_peaks.pop()
+    print('数据调整后的峰谷值，确保峰值在前，以谷值结束：')
+    print(len(indexes_peaks), indexes_peaks)
+    print(len(indexes_valleys), indexes_valleys)
+
+    indexes_callback10=[]
+    indexes_callback20 = []
+    indexes_callback30 = []
+    temp=[]
+    for i in range(len(indexes_peaks)):
+
+        if (line[indexes_peaks[i]]-line[indexes_valleys[i]])/line[indexes_peaks[i]]<=0.1:
+            indexes_callback10.append(indexes_peaks[i])
+
+        elif  (line[indexes_peaks[i]]-line[indexes_valleys[i]])/line[indexes_peaks[i]]<=0.2:
+            indexes_callback20.append(indexes_peaks[i])
+
+        elif (line[indexes_peaks[i]]-line[indexes_valleys[i]])/line[indexes_peaks[i]]<=0.3:
+            indexes_callback30.append(indexes_peaks[i])
+
+        else :
+            print('有异常点。')
+        temp.append((line[indexes_peaks[i]]-line[indexes_valleys[i]])/line[indexes_peaks[i]])
+    print(len(temp),temp)
+    print('回调10%的点:')
+    print(len(indexes_callback10),indexes_callback10)
+    print('回调20%的点:')
+    print(len(indexes_callback20),indexes_callback20)
+    print('回调30%的点')
+    print(len(indexes_callback30),indexes_callback30)
+    print(stock_data.loc[indexes_callback20])
+    print(stock_data.loc[indexes_callback30])
+
+    return indexes_callback30,indexes_callback20,indexes_callback10
+
+def mark_by_boll(stock_data):
+
+    peaks_callback_from_upper_to_lower, \
+    peaks_callback_between_mid_and_upper, \
+    peaks_callback_between_mid_and_lower=get_index_by_boll(stock_data,'CLOSE')  #获取不同分类点的index
+
+    df1=stock_data.loc[peaks_callback_from_upper_to_lower]
+    df2=stock_data.loc[peaks_callback_between_mid_and_upper]
+    df3=stock_data.loc[peaks_callback_between_mid_and_lower]
+    # print(stock_data.loc[767])
+    df1['LABEL']=0
+    df2['LABEL']=1
+    df3['LABEL']=2
+    frames=[df1,df2,df3]
+    result = pd.concat(frames)
+    result.to_csv('stock_{}/peaks_result.csv'.format(ts_code))
+
+def mark_peaks_by_31situation(stock_data,name):
+    indexes_peaks, values_peaks = get_line_peaks(stock_data[name])#股票所有数据中峰值点的index和值
+    data = find_daily_situation(ts_code, start_date, end_date)#股票所有数据中符合三阴一阳和三阴一阴的点的日期
+    indexes_data=stock_data[stock_data.loc[:,'TIME'].isin(data)].index.tolist()#股票所有数据中日期符合三阴一阳和三阴一阴的点的index
+    # print(len(data),data)
+    # print(len(indexes_data),indexes_data)
+    weights1=[]
+    weights2=[]
+    weights3=[]
+    weights4=[]
+    for i in indexes_peaks:
+        if i in indexes_data:
+            weights1.append(i)
+        elif (i-1) in indexes_data or (i+1) in indexes_data:
+            weights2.append(i)
+        elif (i-2) in indexes_data or (i+2) in indexes_data:
+            weights3.append(i)
+        else:
+            weights4.append(i)
+    # print(len(weights1),weights1)
+    # print(len(weights2), weights2)
+    # print(len(weights3), weights3)
+    # print(len(weights4), weights4)
+    stock_data=stock_data.loc[indexes_peaks]
+    stock_data['situation'] = 0
+    # print(stock_data[:10])
+    # print(stock_data.loc[data])
+    stock_data.loc[weights1, 'situation'] = 1
+    stock_data.loc[weights2, 'situation'] = 0.5
+    stock_data.loc[weights3, 'situation'] = 0.2
+
+    stock_data.to_csv('test.csv')
 
 
 def MaxDrawdown(return_list):
@@ -294,42 +391,24 @@ def MaxDrawdown(return_list):
 
 
 if __name__ == '__main__':
-    ts_code = '300497.SZ'  # 此处填写股票号'000661.SZ' '300347.SZ' '688399.SH'
-    start_date = '2015-12-22'  # 开始日期
+    ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
+    start_date = '2017-08-10'  # 开始日期
     end_date = '2020-08-01'  # 结束日期
     stock_data=get_process_datas(ts_code, start_date, end_date)
-    print(stock_data.head())
-    draw_charts(stock_data)
-    wb.open('find_peak.html')
+    # print(stock_data.head())
+    draw_charts(stock_data,'CLOSE')
+    wb.open('stock_{}\/find_peak.html'.format(ts_code))
 
-    peaks_callback_from_upper_to_lower, \
-    peaks_callback_between_mid_and_upper, \
-    peaks_callback_between_mid_and_lower, \
-    valleys_callback_from_upper_to_lower, \
-    valleys_callback_between_mid_and_upper, \
-    valleys_callback_between_mid_and_lower=get_index_by_boll(stock_data)  #获取不同分类点的index
+    # return_list=stock_data['CLOSE'].values.tolist()
+    # print('最大回撤率：',MaxDrawdown(return_list))
 
-    df1=stock_data.loc[peaks_callback_from_upper_to_lower]
-    df2=stock_data.loc[peaks_callback_between_mid_and_upper]
-    df3=stock_data.loc[peaks_callback_between_mid_and_lower]
-    # print(stock_data.loc[767])
-    df1['LABEL']=0
-    df2['LABEL']=1
-    df3['LABEL']=2
-    frames=[df1,df2,df3]
-    result = pd.concat(frames)
-    #
-    # print(df1)
-    # print(df2)
-    # print(df3)
-    #
-    # print(result)
-
-    result.to_csv('peaks_result_{}.csv'.format(ts_code))
+    get_index_by_callback_proportion(stock_data,'CLOSE')
+    mark_peaks_by_31situation(stock_data,'CLOSE')
 
 
-    return_list=stock_data['CLOSE'].values.tolist()
-    print('最大回撤率：',MaxDrawdown(return_list))
+
+
+
 
 
 
