@@ -502,8 +502,10 @@ def draw_peak_charts(ts_code, start_date, end_date,name):
 
     grid_chart.render('stock_{}/find_peak.html'.format(ts_code))
 if __name__ == "__main__":
-    ts_code = '300347.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
-    start_date = '2017-09-01'  # 开始日期
-    end_date = '2020-08-01'  # 结束日期
+    ts_code = '300122.SZ'  # 此处填写股票号'688399.SH','300347.SZ',
+    start_date = '2017-10-01'  # 开始日期
+    end_date = '2020-08-31'  # 结束日期
     draw_chart(ts_code, start_date, end_date)
     draw_peak_charts(ts_code, start_date, end_date,'CLOSE')
+    wb.open('stock_{}\/stock_{}.html'.format(ts_code,ts_code))
+    wb.open('stock_{}\/find_peak.html'.format(ts_code))

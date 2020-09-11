@@ -4,6 +4,7 @@
 @author:shihaojie
 @file: get_stock_data.py
 @time: 2020/08/27
+本部分主要通过wind获得直接获得原始数据及部分因子
 """
 from WindPy import *
 import pandas as pd
@@ -18,9 +19,10 @@ def get_basic_data(ts_code, start_date, end_date):  # 获取股票基本数据�
     else:
         w.start()
         error, basic_data = w.wsd(ts_code, "open,high,low,close,volume", start_date, end_date,"PriceAdj=F", usedf=True)
-        w.close()
+
         if error != 0:
             raise AssertionError("API数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error, basic_data.values[0][0]))
+        w.close()
         basic_data.fillna(0, inplace=True)
         if os.path.exists('stock_{}'.format(ts_code)):
             basic_data.to_csv('stock_{}/stock_basic_{}.csv'.format(ts_code,ts_code), index_label='TIME')
@@ -47,13 +49,14 @@ def get_kdj_data(ts_code, start_date, end_date):  # 获取KDJ数据，分三列�
         error1, k_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=1;PriceAdj=F", usedf=True)
         error2, d_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=2;PriceAdj=F", usedf=True)
         error3, j_data = w.wsd(ts_code, "KDJ", start_date, end_date, "KDJ_N=9;KDJ_M1=3;KDJ_M2=3;KDJ_IO=3;PriceAdj=F", usedf=True)
-        w.close()
+
         if error1 != 0:
             raise AssertionError("K数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, k_data.values[0][0]))
         if error2 != 0:
             raise AssertionError("D数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error2, d_data.values[0][0]))
         if error3 != 0:
             raise AssertionError("J数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error3, j_data.values[0][0]))
+        w.close()
         k_data.rename(columns={'KDJ': 'K'}, inplace=True)
         d_data.rename(columns={'KDJ': 'D'}, inplace=True)
         j_data.rename(columns={'KDJ': 'J'}, inplace=True)
@@ -84,13 +87,14 @@ def get_ma_data(ts_code, start_date, end_date):  # 获取移动平均线，分�
         error1, ma5_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=5;PriceAdj=F", usedf=True)
         error2, ma10_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=10;PriceAdj=F", usedf=True)
         error3, ma20_data = w.wsd(ts_code, "MA", start_date, end_date, "MA_N=20;PriceAdj=F", usedf=True)
-        w.close()
+
         if error1 != 0:
             raise AssertionError("ma5数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, ma5_data.values[0][0]))
         if error2 != 0:
             raise AssertionError("ma10数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error2, ma10_data.values[0][0]))
         if error3 != 0:
             raise AssertionError("ma20数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error3, ma20_data.values[0][0]))
+        w.close()
         ma5_data.rename(columns={'MA': 'MA5'}, inplace=True)
         ma10_data.rename(columns={'MA': 'MA10'}, inplace=True)
         ma20_data.rename(columns={'MA': 'MA20'}, inplace=True)
@@ -125,13 +129,14 @@ def get_macd_data(ts_code, start_date, end_date):  # 获取MACD数据，分别�
                                  usedf=True)
         error3, macd0_data = w.wsd(ts_code, "MACD", start_date, end_date, "MACD_L=26;MACD_S=12;MACD_N=9;MACD_IO=3;PriceAdj=F",
                                    usedf=True)
-        w.close()
+
         if error1 != 0:
             raise AssertionError("ma5数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, dif_data.values[0][0]))
         if error2 != 0:
             raise AssertionError("ma10数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error2, dea_data.values[0][0]))
         if error3 != 0:
             raise AssertionError("ma20数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error3, macd0_data.values[0][0]))
+        w.close()
         dif_data.rename(columns={'MACD': 'DIF'}, inplace=True)
         dea_data.rename(columns={'MACD': 'DEA'}, inplace=True)
         macd0_data.rename(columns={'MACD': 'MACD'}, inplace=True)
@@ -164,13 +169,14 @@ def get_boll_data(ts_code, start_date, end_date):  # 获取布林线，分别是
         error1, mid_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=1;PriceAdj=F", usedf=True)
         error2, upper_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=2;PriceAdj=F",usedf=True)
         error3, lower_data = w.wsd(ts_code, "BOLL", start_date, end_date, "BOLL_N=20;BOLL_Width=2;BOLL_IO=3;PriceAdj=F",usedf=True)
-        w.close()
+
         if error1 != 0:
             raise AssertionError("MID数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error1, mid_data.values[0][0]))
         if error2 != 0:
             raise AssertionError("UPPER数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error2, upper_data.values[0][0]))
         if error3 != 0:
             raise AssertionError("LOWER数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error3, lower_data.values[0][0]))
+        w.close()
         mid_data.rename(columns={'BOLL': 'MID'}, inplace=True)
         upper_data.rename(columns={'BOLL': 'UPPER'}, inplace=True)
         lower_data.rename(columns={'BOLL': 'LOWER'}, inplace=True)  # 名字一样，实际上不需要重命名
@@ -197,10 +203,11 @@ def get_daykline_situation(ts_code, start_date, end_date):#获得每日60分钟�
         w.start()
         error, daily_data = w.wsi(ts_code, "chg", start_date+' 09:00:00', end_date+' 15:31:00', "BarSize=60;PriceAdj=F",
                                  usedf=True)
-        w.close()
+
         if error != 0:
             raise AssertionError("日内数据提取错误，ErrorCode={}，错误码含义为'{}'。".format(error, daily_data.values[0][0]))
         daily_data.fillna(0, inplace=True)
+        w.close()
         if os.path.exists('stock_{}'.format(ts_code)):
             daily_data.to_csv('stock_{}/stock_dailychange_{}.csv'.format(ts_code,ts_code), index_label='TIME')
         else:

@@ -4,6 +4,7 @@
 @author:shihaojie
 @file: get_train_factors.py
 @time: 2020/08/27
+本部分主要负责处理数据，包括因子的处理，获得峰值点，为分类打数据标签等
 """
 from get_stock_data import *
 import scipy.signal as signal
@@ -80,10 +81,10 @@ def get_index_by_callback_proportion(ts_code,start_date,end_date):
     print('回调大于20%的点')
     print(len(others), others)
     stock_data = stock_data.loc[indexes_peaks]
-    stock_data.loc[indexes_callback20, 'LABEL'] = 2
+    stock_data.loc[indexes_callback20, 'LABEL'] = 1#二分类
     stock_data.loc[indexes_callback10, 'LABEL'] = 1
     stock_data.loc[indexes_callback5, 'LABEL'] = 0
-    stock_data.loc[others, 'LABEL'] = 2
+    stock_data.loc[others, 'LABEL'] = 1
     stock_label_data=stock_data[['TIME', 'LABEL']]
     stock_label_data.to_csv('stock_{}/stock_label_data.csv'.format(ts_code))
     return stock_label_data
@@ -190,10 +191,10 @@ def weighted_by_boll(tscode,start_date,end_date):
     print('本次抓取的股票{}共有{}天峰值'.format(tscode,len(df2)))
     print('其中收盘价小于中轨线的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0])))
     print('其中收盘价与上轨线的差值绝对值小于1%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==1])))
-    print('其中收盘价与上轨线的差值绝对值介于1%-2%%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.8])))
-    print('其中收盘价与上轨线的差值绝对值介于2%-3%%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.6])))
-    print('其中收盘价与上轨线的差值绝对值介于3%-5%%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.4])))
-    print('其中收盘价与上轨线的差值绝对值大于5%%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.2])))
+    print('其中收盘价与上轨线的差值绝对值介于1%-2%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.8])))
+    print('其中收盘价与上轨线的差值绝对值介于2%-3%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.6])))
+    print('其中收盘价与上轨线的差值绝对值介于3%-5%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.4])))
+    print('其中收盘价与上轨线的差值绝对值大于5%的有{}天'.format(len(df2[df2['WEIGHT-BY-BOLL']==0.2])))
     #print(df2)
     return df2
 
